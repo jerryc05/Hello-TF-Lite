@@ -20,6 +20,9 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
+
+import org.tensorflow.lite.Interpreter;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import org.tensorflow.lite.Interpreter;
+
 import io.jerryc05.hello_tf_lite.env.Logger;
 
 /**
@@ -74,11 +77,14 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
 
   private Interpreter tfLite;
 
-  private TFLiteObjectDetectionAPIModel() {}
+  private TFLiteObjectDetectionAPIModel() {
+  }
 
-  /** Memory-map the model file in Assets. */
+  /**
+   * Memory-map the model file in Assets.
+   */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
-      throws IOException {
+          throws IOException {
     AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
     FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
     FileChannel fileChannel = inputStream.getChannel();
@@ -90,42 +96,44 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   /**
    * Initializes a native TensorFlow session for classifying images.
    *
-   * @param assetManager The asset manager to be used to load assets.
+   * @param assetManager  The asset manager to be used to load assets.
    * @param modelFilename The filepath of the model GraphDef protocol buffer.
    * @param labelFilename The filepath of label file for classes.
-   * @param inputSize The size of image input
-   * @param isQuantized Boolean representing model is quantized or not
+   * @param inputSize     The size of image input
+   * @param isQuantized   Boolean representing model is quantized or not
    */
   public static Classifier create(
-      final AssetManager assetManager,
-      final String modelFilename,
-      final String labelFilename,
-      final int inputSize,
-      final boolean isQuantized)
-      throws IOException {
-    final TFLiteObjectDetectionAPIModel d = new TFLiteObjectDetectionAPIModel();
+          final AssetManager assetManager,
+          final String modelFilename,
+          final String labelFilename,
+          final int inputSize,
+          final boolean isQuantized)
+          throws IOException {
+    final TFLiteObjectDetectionAPIModel apiModel = new TFLiteObjectDetectionAPIModel();
 
-    InputStream labelsInput = null;
     String actualFilename = labelFilename.split("file:///android_asset/")[1];
-    labelsInput = assetManager.open(actualFilename);
-    BufferedReader br = null;
-    br = new BufferedReader(new InputStreamReader(labelsInput));
+    InputStream labelsInput = assetManager.open(actualFilename);
+    BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
     String line;
     while ((line = br.readLine()) != null) {
       LOGGER.w(line);
-      d.labels.add(line);
+      apiModel.labels.add(line);
     }
     br.close();
 
-    d.inputSize = inputSize;
+    apiModel.inputSize = inputSize;
 
-    try {
-      d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+//    try {
+    apiModel.tfLite = new Interpreter(
+            loadModelFile(assetManager, modelFilename)
+//            ,(new Interpreter.Options())
+//                    .addDelegate(new GpuDelegate())
+    );
+//    } catch (Exception e) {
+//      throw new RuntimeException(e);
+//    }
 
-    d.isModelQuantized = isQuantized;
+    apiModel.isModelQuantized = isQuantized;
     // Pre-allocate buffers.
     int numBytesPerChannel;
     if (isQuantized) {
@@ -133,16 +141,16 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     } else {
       numBytesPerChannel = 4; // Floating point
     }
-    d.imgData = ByteBuffer.allocateDirect(1 * d.inputSize * d.inputSize * 3 * numBytesPerChannel);
-    d.imgData.order(ByteOrder.nativeOrder());
-    d.intValues = new int[d.inputSize * d.inputSize];
+    apiModel.imgData = ByteBuffer.allocateDirect(1 * apiModel.inputSize * apiModel.inputSize * 3 * numBytesPerChannel);
+    apiModel.imgData.order(ByteOrder.nativeOrder());
+    apiModel.intValues = new int[apiModel.inputSize * apiModel.inputSize];
 
-    d.tfLite.setNumThreads(NUM_THREADS);
-    d.outputLocations = new float[1][NUM_DETECTIONS][4];
-    d.outputClasses = new float[1][NUM_DETECTIONS];
-    d.outputScores = new float[1][NUM_DETECTIONS];
-    d.numDetections = new float[1];
-    return d;
+    apiModel.tfLite.setNumThreads(NUM_THREADS);
+    apiModel.outputLocations = new float[1][NUM_DETECTIONS][4];
+    apiModel.outputClasses = new float[1][NUM_DETECTIONS];
+    apiModel.outputScores = new float[1][NUM_DETECTIONS];
+    apiModel.numDetections = new float[1];
+    return apiModel;
   }
 
   @Override
@@ -198,28 +206,29 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
     final ArrayList<Recognition> recognitions = new ArrayList<>(NUM_DETECTIONS);
     for (int i = 0; i < NUM_DETECTIONS; ++i) {
       final RectF detection =
-          new RectF(
-              outputLocations[0][i][1] * inputSize,
-              outputLocations[0][i][0] * inputSize,
-              outputLocations[0][i][3] * inputSize,
-              outputLocations[0][i][2] * inputSize);
+              new RectF(
+                      outputLocations[0][i][1] * inputSize,
+                      outputLocations[0][i][0] * inputSize,
+                      outputLocations[0][i][3] * inputSize,
+                      outputLocations[0][i][2] * inputSize);
       // SSD Mobilenet V1 Model assumes class 0 is background class
       // in label file and class labels start from 1 to number_of_classes+1,
       // while outputClasses correspond to class index from 0 to number_of_classes
       int labelOffset = 1;
       recognitions.add(
-          new Recognition(
-              "" + i,
-              labels.get((int) outputClasses[0][i] + labelOffset),
-              outputScores[0][i],
-              detection));
+              new Recognition(
+                      "" + i,
+                      labels.get((int) outputClasses[0][i] + labelOffset),
+                      outputScores[0][i],
+                      detection));
     }
     Trace.endSection(); // "recognizeImage"
     return recognitions;
   }
 
   @Override
-  public void enableStatLogging(final boolean logStats) {}
+  public void enableStatLogging(final boolean logStats) {
+  }
 
   @Override
   public String getStatString() {
@@ -227,7 +236,8 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+  }
 
   public void setNumThreads(int num_threads) {
     if (tfLite != null) tfLite.setNumThreads(num_threads);

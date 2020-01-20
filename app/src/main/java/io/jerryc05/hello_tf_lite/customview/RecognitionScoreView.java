@@ -21,6 +21,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
+
 import java.util.List;
 
 import io.jerryc05.hello_tf_lite.tflite.Classifier.Recognition;
@@ -37,8 +38,8 @@ public class RecognitionScoreView extends View implements ResultsView {
     super(context, set);
 
     textSizePx =
-        TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
+            TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
     fgPaint = new Paint();
     fgPaint.setTextSize(textSizePx);
 

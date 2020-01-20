@@ -17,11 +17,14 @@ package io.jerryc05.hello_tf_lite.env;
 
 import android.graphics.Bitmap;
 import android.text.TextUtils;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Size class independent of a Camera object. */
+/**
+ * Size class independent of a Camera object.
+ */
 public class Size implements Comparable<Size>, Serializable {
 
   // 1.4 went out with this UID so we'll need to maintain it to preserve pending queries when
@@ -44,7 +47,7 @@ public class Size implements Comparable<Size>, Serializable {
   /**
    * Rotate a size by the given number of degrees.
    *
-   * @param size Size to rotate.
+   * @param size     Size to rotate.
    * @param rotation Degrees {0, 90, 180, 270} to rotate the size.
    * @return Rotated size.
    */

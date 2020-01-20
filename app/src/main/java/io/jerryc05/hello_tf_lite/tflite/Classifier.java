@@ -17,9 +17,12 @@ package io.jerryc05.hello_tf_lite.tflite;
 
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+
 import java.util.List;
 
-/** Generic interface for interacting with different recognition engines. */
+/**
+ * Generic interface for interacting with different recognition engines.
+ */
 public interface Classifier {
   List<Recognition> recognizeImage(Bitmap bitmap);
 
@@ -33,7 +36,9 @@ public interface Classifier {
 
   void setUseNNAPI(boolean isChecked);
 
-  /** An immutable result returned by a Classifier describing what was recognized. */
+  /**
+   * An immutable result returned by a Classifier describing what was recognized.
+   */
   public class Recognition {
     /**
      * A unique identifier for what has been recognized. Specific to the class, not the instance of
@@ -41,7 +46,9 @@ public interface Classifier {
      */
     private final String id;
 
-    /** Display name for the recognition. */
+    /**
+     * Display name for the recognition.
+     */
     private final String title;
 
     /**
@@ -49,11 +56,13 @@ public interface Classifier {
      */
     private final Float confidence;
 
-    /** Optional location within the source image for the location of the recognized object. */
+    /**
+     * Optional location within the source image for the location of the recognized object.
+     */
     private RectF location;
 
     public Recognition(
-        final String id, final String title, final Float confidence, final RectF location) {
+            final String id, final String title, final Float confidence, final RectF location) {
       this.id = id;
       this.title = title;
       this.confidence = confidence;
