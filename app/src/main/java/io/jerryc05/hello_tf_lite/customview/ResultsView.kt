@@ -12,14 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
+package io.jerryc05.hello_tf_lite.customview
 
-package io.jerryc05.hello_tf_lite.customview;
+import io.jerryc05.hello_tf_lite.tflite.Classifier.Recognition
 
-import java.util.List;
-
-import io.jerryc05.hello_tf_lite.tflite.Classifier;
-
-
-public interface ResultsView {
-  public void setResults(final List<Classifier.Recognition> results);
+interface ResultsView {
+    fun setResults(results: List<Recognition>?)
 }
