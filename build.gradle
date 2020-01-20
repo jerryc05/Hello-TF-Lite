@@ -4,7 +4,7 @@ buildscript {
     repositories {
         google()
         jcenter()
-
+        mavenCentral()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.0.0-alpha08"
@@ -21,10 +21,6 @@ allprojects {
         jcenter()
         mavenCentral()
     }
-}
-
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
 }
 
 task clean(type: Delete) {
